@@ -25,3 +25,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 8080
 
 CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
+
+RUN php artisan migrate --force
+RUN php artisan db:seed --force
