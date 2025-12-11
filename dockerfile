@@ -9,10 +9,16 @@ RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath xml zip
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
+
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+ENV COMPOSER_MEMORY_LIMIT=-1
+
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader --no-scripts
 
 COPY . .
+
+RUN composer dump-autoload --optimize && php artisan package:discover --ansi || true
+RUN php artisan storage:link || true
 
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
 
