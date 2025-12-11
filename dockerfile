@@ -1,20 +1,21 @@
-# base image PHP 8.2 with extensions
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
-# install deps
 RUN apt-get update && apt-get install -y \
-    zip unzip git libzip-dev libpng-dev libonig-dev libxml2-dev \
-    libcurl4-openssl-dev libpq-dev \
-  && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl
+    git zip unzip libzip-dev libpng-dev libonig-dev \
+    libxml2-dev curl && rm -rf /var/lib/apt/lists/*
 
-# install composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath xml zip
 
 WORKDIR /var/www/html
-COPY . /var/www/html
 
-RUN composer install --no-dev --optimize-autoloader
-RUN php artisan key:generate
+COPY composer.json composer.lock ./
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
-EXPOSE 8000
-CMD ["php","artisan","serve","--host=0.0.0.0","--port=8000"]
+COPY . .
+
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+
+EXPOSE 8080
+
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
