@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: test-sales-dashboard
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    branch: main
